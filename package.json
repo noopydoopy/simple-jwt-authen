@@ -1,0 +1,23 @@
+{
+  "name": "jwt-authen",
+  "version": "1.0.0",
+  "description": "This is the example of nodejs authen with jwt strategy",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon ./src/index.js"
+  },
+  "keywords": [
+    "nodejwy"
+  ],
+  "author": "sooparerk sakyai",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jwt-simple": "^0.5.6",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0"
+  }
+}
