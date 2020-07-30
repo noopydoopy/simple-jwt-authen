@@ -30,14 +30,17 @@ const ensureAuthenticated = passport.authenticate("jwt", { session: false }, (er
 });
 
 const verifyToken = (req, res, next) => {
-    if(req.headers.authorization) {
+    if (req.headers.authorization) {
         jwt.verify(req.headers.authorization, secret, (error, decoded) => {
             console.log(decoded);
-            if(!error)
-                next();
+            if (!error)
+                return next();
+            else
+                res.send(401, 'Unauthorized');
         })
+    } else {
+        res.send(401, 'Unauthorized');
     }
-    res.redirect('/loginAzure');
 }
 // passport.use(jwtAuth); // Apply jwt strategy
 
