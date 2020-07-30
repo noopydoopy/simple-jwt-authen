@@ -1,5 +1,5 @@
 const express = require('express');
-const jwt = require("jwt-simple");
+const jwt = require('jsonwebtoken');
 const bodyParser = require("body-parser");
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const JwtStrategy = require("passport-jwt").Strategy;
@@ -15,7 +15,7 @@ const { loginMIddleware } = require('./middleware');
 const { response } = require('express');
 const secret = process.env.APP_SECRET;
 const jwtOptions = {
-    jwtFromRequest: ExtractJwt.fromHeader("authorization"),
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: secret
 };
 
@@ -25,9 +25,21 @@ const jwtAuth = new JwtStrategy(jwtOptions, (payload, done) => {
     else done(null, false);
 });
 
-const ensureAuthenticated = passport.authenticate("jwt", { session: false });
+const ensureAuthenticated = passport.authenticate("jwt", { session: false }, (error, payload) => {
+    console.log(error);
+});
 
-passport.use(jwtAuth); // Apply jwt strategy
+const verifyToken = (req, res, next) => {
+    if(req.headers.authorization) {
+        jwt.verify(req.headers.authorization, secret, (error, decoded) => {
+            console.log(decoded);
+            if(!error)
+                next();
+        })
+    }
+    res.redirect('/loginAzure');
+}
+// passport.use(jwtAuth); // Apply jwt strategy
 
 const session = require('express-session');
 const sessOpts = {
@@ -86,7 +98,7 @@ passport.use(new OIDCStrategy({
 ));
 
 
-app.get("/", ensureAuthenticated, (req, res) => {
+app.get("/", verifyToken, (req, res) => {
     res.send("You are in authenticated site.");
 });
 
@@ -102,7 +114,7 @@ app.post('/login', loginMIddleware, (req, res) => {
     res.send(jwt.encode(claims, secret));
 })
 
-app.get('/loginaAzure',
+app.get('/loginAzure',
     function (req, res, next) {
         passport.authenticate('azuread-openidconnect',
             {
@@ -152,10 +164,11 @@ const authenticateCallback = (req, res) => {
     // todo apply jwt again here.
     if (!res.locals.err) {
         const claims = {
-            name: req.body.username,
-            expired_in: new Date(Date.now() + 8640)
+            name: req.user.name,
+            email: req.user.email
         }
-        res.send(jwt.encode(req.user, secret));
+        const token = jwt.sign(claims, secret, { expiresIn: 60 });
+        res.send(token);
     } else {
         res.send(500, res.locals.err.message);
     }
